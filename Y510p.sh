@@ -72,6 +72,7 @@ decompile_dsdt()
 
 renaming_ssdt()
 {
+    # Renaming SSDT's based on their actual content so that SSDT's extracted from any methods can be renamed correctly
     echo "${green}${bold}[(D/S)SDT]${normal}${bold}: Renaming SSDTs...${normal}"
     echo "\n    >>>>   Renaming SSDT's Started   <<<<    \n" >> $logFile 2>&1   #Logging Purpose Only
     grep PTID ${tmp_d}/DSDT/Decompiled/SSDT* | awk '{print $1}' | sed 's/://' | head -1 | xargs -I {} mv -v {} ${tmp_d}/DSDT/Decompiled/SSDT-0.dsl >> $logFile 2>&1
