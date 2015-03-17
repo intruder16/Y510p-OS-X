@@ -366,7 +366,9 @@ compile_dsdt()
     echo "     ...    Compiling SSDT-6..."
     ./tools/iasl -vr -w1 -ve -p ${tmp_d}/DSDT/Compiled/SSDT-6.aml -I ${tmp_d}/DSDT/Decompiled ${tmp_d}/DSDT/Decompiled/SSDT-6.dsl >> $compile_log 2>&1
 
+    echo "\n${green}${bold}[--Done--]${normal}${bold}: All done...${normal}\n"
     echo "${green}${bold}[--Done--]${normal}${blue}: ${bold}Very Imp${red} : ${bold}Do NOT forget to check logs!${normal}\n"
+    echo "${green}${bold}[--Done--]${normal}${bold}: Manually copy all from ${blue}\"${tmp_d}/DSDT/Compiled/\"${normal}${bold} to ${blue}\"/EFI/EFI/CLOVER/ACPI/patched/\"${bold}${normal}...${normal}\n"
     echo "${green}${bold}[--Done--]${normal}${bold}: Thanks for using this script! Any Feedbacks are welcome!${normal}\n"
 }
 
