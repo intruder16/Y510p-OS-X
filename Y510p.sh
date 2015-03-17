@@ -1,9 +1,8 @@
 #!/bin/sh
 
-#  Y510p-OS-X.sh
+#  Y510p.sh
 #
 #  Created by Intruder16 on 14/03/15.
-#
 
 # Debug
 # set -x
