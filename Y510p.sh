@@ -469,6 +469,8 @@ case "$1" in
         pre_run
         ;;
     --update|-u)
+        echo "\n${cyan}${bold}Lenevo Y510p IdeaPad${normal} - Yosemite 10.10.2"
+        echo "https://github.com/intruder16/Y510p-OS-X\n"
         echo "${green}${bold}[---GIT--]${normal}${bold}: Updating to latest Y510p-OS-X git master....${normal}"
         git pull
         echo "${green}${bold}[---GIT--]${normal}${bold}: Updated successfully....${normal}"
