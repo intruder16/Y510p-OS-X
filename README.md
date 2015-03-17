@@ -2,6 +2,8 @@
 
 This repository contains all the necessary patches and an autopatcher script for DSDT/SSDT's on Y510p.
 
+This will not in any way make any kind of change to your system! You do not need to run this with "sudo"!
+
 This script is created for the fact that if you change BIOS settings (a headache for those who have a modded BIOS)
 you will have to re-extract and re-patch the ACPI tables so that you will always have a patched DSDT specifically
 for your BIOS settings. What happens is for some settings you change in BIOS the result is reflected in your ACPI tables.
