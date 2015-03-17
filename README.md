@@ -10,7 +10,7 @@ settings).
 
 So what this script will do is re-patch your extracted tables with the necessary patches within seconds.
 
-#Guide for installing OS X Yosemite on Y510p
+#Guide for installing OS X Yosemite
 
 To install OS X Yosemite on your Y510p you can refer to [this](http://www.insanelymac.com/forum/topic/303276-guide-for-installing-os-x-yosemite-on-lenovo-ideapad-y510p/) excellent guide with all the necessary steps to make your
 Hackintosh up and running.
