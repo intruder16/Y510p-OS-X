@@ -1,4 +1,5 @@
 # Created by intruder16
+# Credits to RehabMan
 
 into method label _Q11 replace_content
 begin

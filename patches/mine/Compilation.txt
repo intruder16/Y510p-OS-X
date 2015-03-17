@@ -1,5 +1,4 @@
-#
-# Fix compilation errors
+# Created by intruder16
 
 # Fix _T_x compiler reserved warnings
 into_all all code_regex _T_0 replaceall_matched begin T_0 end;
