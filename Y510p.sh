@@ -7,11 +7,26 @@
 # Debug
 # set -x
 
-# To-Do:
-# 1. Curl timeout
-# 2. Errors check
+# Changelog:
+#
+#   v1.1 :
+#           -Internet check - the script will check for internet conn. if its available it will download all up-to-date patches required else it will use patches from "patches/" folder (i'll keep them up-to-date)
+#           Multiple runs - if you run the script more than once, you won't have to worry about previous leftovers they won't be overwritten simply copied to new folder inside "tmp/" like "tmp-1", "tmp-2" etc.
+#           -Added "logging system"
+#           -Added "patches check"
+#           -Added choice for both Synaptics & ELAN Touchpad users (needed for brightness keys to work)
+#           -Added choice for debug methods (DSDT, _WAK/_PTC, Qxx)
+#           -Intelligent SSDT patching, that is, no matter how you extract acpi tables they will be patched always right. For Ex.
+#               Every method has unique naming of ssdt's.
+#               If extracted from linux then ssdt1,ssd2,etc and ssdt6, ssdt7 & ssdt8 inside dynamic folder.
+#               If extracted using clover then ssdt-0, ssdt-1, ssd-2, ssdt3x, ssdt-4x etc.
+#               Now the script will look at the contents of SSDT and patch it with required patches.
+#           -Added brief description at the start of script about what it is going to do.
 
 clear # Make some space xD
+
+# Script version
+sVersion=1.1
 
 # Set the colours you can use
 black='\033[0;30m'
@@ -473,14 +488,16 @@ case "$1" in
     --update|-u)
         echo "\n${cyan}${bold}Lenevo Y510p IdeaPad${normal} - Yosemite 10.10.2"
         echo "https://github.com/intruder16/Y510p-OS-X\n"
+        echo "Script version \"${green}v$sVersion${normal}\"\n"
         echo "${green}${bold}[---GIT--]${normal}${bold}: Updating to latest Y510p-OS-X git master....${normal}"
-        git pull
+        git pull >> /dev/null 2>&1
         echo "${green}${bold}[---GIT--]${normal}${bold}: Updated successfully....${normal}"
         exit
         ;;
     *)
         echo "\n${cyan}${bold}Lenevo Y510p IdeaPad${normal} - Yosemite 10.10.2"
         echo "https://github.com/intruder16/Y510p-OS-X\n"
+        echo "Script version \"${green}v$sVersion${normal}\"\n"
         echo "\t${bold}--target(-t)${normal}: Path to the directory where your ACPI tables are stored"
         echo "\t${bold}--update(-u)${normal}: Update to latest git version\n"
         echo "${blue}IMP: ${red}\"--target(-t)\"${normal} is a must! Files will be copied to the working dir leaving originals untouched."
