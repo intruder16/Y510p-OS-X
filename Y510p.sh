@@ -1,0 +1,512 @@
+#!/bin/sh
+
+#  Y510p-OS-X.sh
+#
+#  Created by Intruder16 on 14/03/15.
+#
+
+# Debug
+# set -x
+
+# To-Do:
+# 1. Curl timeout
+# 2. Errors check
+
+clear # Make some space xD
+
+# Set the colours you can use
+black='\033[0;30m'
+white='\033[0;37m'
+red='\033[0;31m'
+green='\033[0;32m'
+yellow='\033[0;33m'
+blue='\033[0;34m'
+magenta='\033[0;35m'
+cyan='\033[0;36m'
+normal="\033[m"
+bold="\033[1m"
+
+# Set continue to false by default
+CONTINUE=false
+
+# The version info of the running system i.e. '10.10.2'
+ProductVersion="$(sw_vers -productVersion)"
+
+copy_tables()
+{
+    # Specify log location
+    logFile="$tmp_d/script_run.log"
+    decompile_log="${tmp_d}/decompile.log"
+    patch_log="${tmp_d}/patch.log"
+    compile_log="${tmp_d}/compile.log"
+
+    echo "${green}${bold}[ PreRun ]${normal}${bold}: Copying tables...${normal}"
+    # Cleaning & creating working dirs
+    mkdir -p "${tmp_d}/DSDT/"
+    mkdir -p "${tmp_d}/patches/"
+    # Creating log file
+    touch $logFile
+    touch $decompile_log
+    touch $patch_log
+    touch $compile_log
+    # Copying patches
+    echo "\n    >>>>   Copying Pacthes   <<<<    \n" >> $logFile 2>&1   #Logging Purpose Only
+    cp -v patches/mine/*.txt ${tmp_d}/patches/  >> $logFile 2>&1
+    # Copying orig DSDT/SSDT's
+    echo "\n    >>>>   Copying DSDT/SSDT's   <<<<    \n" >> $logFile 2>&1   #Logging Purpose Only
+    cp -v "${target_dir}/DSDT"*"" "${tmp_d}/DSDT/" >> $logFile 2>&1
+    find "${target_dir}" -name \SSDT\* -exec cp -vR '{}' "${tmp_d}/DSDT/" ";" >> $logFile 2>&1
+}
+
+decompile_dsdt()
+{
+    echo "${green}${bold}[(D/S)SDT]${normal}${bold}: Decompiling DSDT...${normal}"
+    echo "\n    >>>>   Decompiling Started   <<<<    \n" >> $logFile 2>&1   #Logging Purpose Only
+    ./tools/iasl -da -dl ${tmp_d}/DSDT/* >> $decompile_log 2>&1
+    mkdir -pv ${tmp_d}/DSDT/Decompiled/Not\ Needed/  >> $logFile 2>&1
+    mkdir -pv ${tmp_d}/DSDT/Compiled  >> $logFile 2>&1
+    mkdir -pv ${tmp_d}/DSDT/Original  >> $logFile 2>&1
+    find ${tmp_d}/DSDT/ -type f -name "*.dsl" -maxdepth 1 -exec mv -v '{}' ${tmp_d}/DSDT/Decompiled/ >> $logFile 2>&1 \;
+    find ${tmp_d}/DSDT/ -type f -maxdepth 1 -exec mv -v '{}' ${tmp_d}/DSDT/Original/ >> $logFile 2>&1 \;
+}
+
+renaming_ssdt()
+{
+    echo "${green}${bold}[(D/S)SDT]${normal}${bold}: Renaming SSDTs...${normal}"
+    echo "\n    >>>>   Renaming SSDT's Started   <<<<    \n" >> $logFile 2>&1   #Logging Purpose Only
+    grep PTID ${tmp_d}/DSDT/Decompiled/SSDT* | awk '{print $1}' | sed 's/://' | head -1 | xargs -I {} mv -v {} ${tmp_d}/DSDT/Decompiled/SSDT-0.dsl >> $logFile 2>&1
+    grep _PDC ${tmp_d}/DSDT/Decompiled/SSDT* | awk '{print $1}' | sed 's/://' | head -1 | xargs -I {} mv -v {} ${tmp_d}/DSDT/Decompiled/SSDT-2.dsl >> $logFile 2>&1
+    grep 0x00020000 ${tmp_d}/DSDT/Decompiled/SSDT* | awk '{print $1}' | sed 's/://' | head -1 | xargs -I {} mv -v {} ${tmp_d}/DSDT/Decompiled/SSDT-3.dsl >> $logFile 2>&1
+    grep SB.PCI0.PEG0.PEGP ${tmp_d}/DSDT/Decompiled/SSDT* | awk '{print $1}' | sed 's/://' | head -1 | xargs -I {} mv -v {} ${tmp_d}/DSDT/Decompiled/SSDT-4.dsl >> $logFile 2>&1
+    grep C1TM ${tmp_d}/DSDT/Decompiled/SSDT* | awk '{print $1}' | sed 's/://' | head -1 | xargs -I {} mv -v {} ${tmp_d}/DSDT/Decompiled/SSDT-5.dsl >> $logFile 2>&1
+    grep PR.CPU0._CST ${tmp_d}/DSDT/Decompiled/SSDT* | awk '{print $1}' | sed 's/://' | head -1 | xargs -I {} mv -v {} ${tmp_d}/DSDT/Decompiled/SSDT-6.dsl >> $logFile 2>&1
+    grep PR.CPPC ${tmp_d}/DSDT/Decompiled/SSDT* | awk '{print $1}' | sed 's/://' | head -1 | xargs -I {} mv -v {} ${tmp_d}/DSDT/Decompiled/Not\ Needed/ >> $logFile 2>&1
+    grep PR.CPU0._PCT ${tmp_d}/DSDT/Decompiled/SSDT* | awk '{print $1}' | sed 's/://' | head -1 | xargs -I {} mv -v {} ${tmp_d}/DSDT/Decompiled/Not\ Needed/ >> $logFile 2>&1
+}
+
+acquire_patches()
+{
+    echo "${green}${bold}[(D/S)SDT]${normal}${bold}: Acquiring Pacthes...${normal}"
+    echo "\n    >>>>   Downloading Patches Started   <<<<    \n" >> $logFile 2>&1   #Logging Purpose Only
+    curl -o ${tmp_d}/patches/remove_DSM.txt https://raw.githubusercontent.com/RehabMan/Laptop-DSDT-Patch/master/syntax/remove_DSM.txt >> $logFile 2>&1
+    curl -o ${tmp_d}/patches/system_WAK2.txt https://raw.githubusercontent.com/RehabMan/Laptop-DSDT-Patch/master/system/system_WAK2.txt >> $logFile 2>&1
+    curl -o ${tmp_d}/patches/system_HPET.txt https://raw.githubusercontent.com/RehabMan/Laptop-DSDT-Patch/master/system/system_HPET.txt >> $logFile 2>&1
+    curl -o ${tmp_d}/patches/system_SMBUS.txt https://raw.githubusercontent.com/RehabMan/Laptop-DSDT-Patch/master/system/system_SMBUS.txt >> $logFile 2>&1
+    curl -o ${tmp_d}/patches/system_IRQ.txt https://raw.githubusercontent.com/RehabMan/Laptop-DSDT-Patch/master/system/system_IRQ.txt >> $logFile 2>&1
+    curl -o ${tmp_d}/patches/system_RTC.txt https://raw.githubusercontent.com/RehabMan/Laptop-DSDT-Patch/master/system/system_RTC.txt >> $logFile 2>&1
+    curl -o ${tmp_d}/patches/system_OSYS.txt https://raw.githubusercontent.com/RehabMan/Laptop-DSDT-Patch/master/system/system_OSYS.txt >> $logFile 2>&1
+    curl -o ${tmp_d}/patches/system_Mutex.txt https://raw.githubusercontent.com/RehabMan/Laptop-DSDT-Patch/master/system/system_Mutex.txt >> $logFile 2>&1
+    curl -o ${tmp_d}/patches/system_PNOT.txt https://raw.githubusercontent.com/RehabMan/Laptop-DSDT-Patch/master/system/system_PNOT.txt >> $logFile 2>&1
+    curl -o ${tmp_d}/patches/system_IMEI.txt https://raw.githubusercontent.com/RehabMan/Laptop-DSDT-Patch/master/system/system_IMEI.txt >> $logFile 2>&1
+    curl -o ${tmp_d}/patches/usb_7-series.txt https://raw.githubusercontent.com/RehabMan/Laptop-DSDT-Patch/master/usb/usb_7-series.txt >> $logFile 2>&1
+    curl -o ${tmp_d}/patches/graphics_Rename-GFX0.txt https://raw.githubusercontent.com/RehabMan/Laptop-DSDT-Patch/master/graphics/graphics_Rename-GFX0.txt >> $logFile 2>&1
+    curl -o ${tmp_d}/patches/misc_Haswell-LPC.txt https://raw.githubusercontent.com/RehabMan/Laptop-DSDT-Patch/master/misc/misc_Haswell-LPC.txt >> $logFile 2>&1
+    curl -o ${tmp_d}/patches/debug.txt https://raw.githubusercontent.com/RehabMan/OS-X-ACPI-Debug/master/debug.txt >> $logFile 2>&1
+    curl -o ${tmp_d}/patches/instrument_WAK_PTS.txt https://raw.githubusercontent.com/RehabMan/OS-X-ACPI-Debug/master/instrument_WAK_PTS.txt >> $logFile 2>&1
+    curl -o ${tmp_d}/patches/instrument_Qxx.txt https://raw.githubusercontent.com/RehabMan/OS-X-ACPI-Debug/master/instrument_Qxx.txt >> $logFile 2>&1
+    curl -o ${tmp_d}/patches/graphics_PNLF_haswell.txt https://raw.githubusercontent.com/RehabMan/Laptop-DSDT-Patch/master/graphics/graphics_PNLF_haswell.txt >> $logFile 2>&1
+}
+
+check_patches()
+{
+    echo "${green}${bold}[(D/S)SDT]${normal}${bold}: Checking Pacthes...${normal}"
+    echo "\n    >>>>   Checking Patches Started   <<<<    \n" >> $logFile 2>&1   #Logging Purpose Only
+    foundc=0
+    nfoundc=0
+    fflist=""
+    nflist=""
+    patch_list='patches/Patch_list.txt' # file with list of patches to search for
+
+    echo "For patches in $patch_list" >> $logFile 2>&1
+    exec 3< $patch_list
+    while read file_a <&3; do
+        if [[ ! -f "${tmp_d}/patches/${file_a}" ]];then    # file is not found or is 0 bytes
+            nfoundc=$((nfoundc + 1))
+            nflist=" ${nflist} ${file_a}"
+            echo '...Not Found: ' "${file_a}" '...' >> $logFile 2>&1
+        else    # file is found and is > 0 bytes.
+            foundc=$((foundc + 1))
+            fflist=" ${fflist} ${file_a}"
+            echo '...Found: ' "${file_a}" '...' >> $logFile 2>&1
+        fi
+    done
+
+    exec 3<&-
+    #echo "List of patches Found: "${fflist}" "
+    #echo "List of patches NOT Found: "${nflist}" "
+    echo "Number of patches found     =  [${foundc}]  " >> $logFile 2>&1
+    echo "Number of patches NOT found =  [${nfoundc}] " >> $logFile 2>&1
+    if [ "${nfoundc}" -gt "0" ] ; then echo "     ...    '${nfoundc}' patch(es) missing! For more info see "$logFile"! Exiting!" $red; exit ; else patch_dsdt ; fi
+}
+
+patch_dsdt()
+{
+    echo "${green}${bold}[--DSDT--]${normal}${bold}: Patching DSDT in Decompiled/${normal}"
+    echo "\n    >>>>   DSDT Patch Started   <<<<    \n" >> $patch_log 2>&1   #Logging Purpose Only
+
+    echo "     ...    [syn] Remove _DSM methods"
+    ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/DSDT.dsl ${tmp_d}/patches/remove_DSM.txt ${tmp_d}/DSDT/Decompiled/DSDT.dsl >> $patch_log 2>&1
+
+    echo "     ...    [syn] Fix _WAK Arg0 v2"
+    ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/DSDT.dsl ${tmp_d}/patches/system_WAK2.txt ${tmp_d}/DSDT/Decompiled/DSDT.dsl >> $patch_log 2>&1
+
+    #echo "     ...    [sys] HPET Fix" # Check if boot / wakeup works
+    #If you have panic "No HPETs available..." or have a abrupt restart after waking from sleep, you may need this patch. The patch makes sure the HPET device is always available.
+    #./tools/patchmatic ${tmp_d}/DSDT/Decompiled/DSDT.dsl ${tmp_d}/patches/system_HPET.txt ${tmp_d}/DSDT/Decompiled/DSDT.dsl >> $logFile
+
+    echo "     ...    [sys] IRQ Fix"
+    ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/DSDT.dsl ${tmp_d}/patches/system_IRQ.txt ${tmp_d}/DSDT/Decompiled/DSDT.dsl >> $patch_log 2>&1
+
+    echo "     ...    [sys] RTC Fix"
+    ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/DSDT.dsl ${tmp_d}/patches/system_RTC.txt ${tmp_d}/DSDT/Decompiled/DSDT.dsl >> $patch_log 2>&1
+
+    echo "     ...    [sys] Add IMEI"
+    ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/DSDT.dsl ${tmp_d}/patches/system_IMEI.txt ${tmp_d}/DSDT/Decompiled/DSDT.dsl >> $patch_log 2>&1
+
+    echo "     ...    [sys] OS Check Fix"
+    ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/DSDT.dsl ${tmp_d}/patches/system_OSYS.txt ${tmp_d}/DSDT/Decompiled/DSDT.dsl >> $patch_log 2>&1
+
+    echo "     ...    [sys] SMBus Fix"
+    ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/DSDT.dsl ${tmp_d}/patches/system_SMBUS.txt ${tmp_d}/DSDT/Decompiled/DSDT.dsl >> $patch_log 2>&1
+
+    echo "     ...    [sys] Fix Mutex with non-zero SyncLevel"
+    ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/DSDT.dsl ${tmp_d}/patches/system_Mutex.txt ${tmp_d}/DSDT/Decompiled/DSDT.dsl >> $patch_log 2>&1
+
+    echo "     ...    [sys] Fix PNOT/PPNT"
+    ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/DSDT.dsl ${tmp_d}/patches/system_PNOT.txt ${tmp_d}/DSDT/Decompiled/DSDT.dsl >> $patch_log 2>&1
+
+    echo "     ...    [usb] 7-series/8-series USB"
+    ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/DSDT.dsl ${tmp_d}/patches/usb_7-series.txt ${tmp_d}/DSDT/Decompiled/DSDT.dsl >> $patch_log 2>&1
+
+    echo "     ...    [gfx] Rename GFX0 to IGPU"
+    ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/DSDT.dsl ${tmp_d}/patches/graphics_Rename-GFX0.txt ${tmp_d}/DSDT/Decompiled/DSDT.dsl >> $patch_log 2>&1
+
+    echo "     ...    [misc] Add Haswell LPC"
+    ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/DSDT.dsl ${tmp_d}/patches/misc_Haswell-LPC.txt ${tmp_d}/DSDT/Decompiled/DSDT.dsl >> $patch_log 2>&1
+
+    echo "     ...    [misc] Insert DTGP"
+    ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/DSDT.dsl ${tmp_d}/patches/insert_DTGP.txt ${tmp_d}/DSDT/Decompiled/DSDT.dsl >> $patch_log 2>&1
+
+    echo "     ...    [misc] ACPIKeyboard"
+    ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/DSDT.dsl ${tmp_d}/patches/ACPIKeyboard.txt ${tmp_d}/DSDT/Decompiled/DSDT.dsl >> $patch_log 2>&1
+
+    echo "     ...    [mine] Battery Management"
+    ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/DSDT.dsl ${tmp_d}/patches/BatteryManagement.txt ${tmp_d}/DSDT/Decompiled/DSDT.dsl >> $patch_log 2>&1
+
+    echo "     ...    [mine] IAOE Patch"
+    ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/DSDT.dsl ${tmp_d}/patches/iaoe.txt ${tmp_d}/DSDT/Decompiled/DSDT.dsl >> $patch_log 2>&1
+
+    echo "     ...    [mine] Fix Error"
+    ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/DSDT.dsl ${tmp_d}/patches/Fix_Error.txt ${tmp_d}/DSDT/Decompiled/DSDT.dsl >> $patch_log 2>&1
+
+    echo "     ...    [mine] Compilation"
+    ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/DSDT.dsl ${tmp_d}/patches/Compilation.txt ${tmp_d}/DSDT/Decompiled/DSDT.dsl >> $patch_log 2>&1
+
+    echo "     ...    [mine] Brightness Key Fix"
+
+    while true
+    do
+    read -p "     -------->     Which touchpad do you have? Synaptics (Default) or ELAN?  (Synaptics[s]/ELAN[e])  " answer
+    #Thats asked because both VoodooPS2 & ELAN comes with their on versions of keyboard and can break brightness key function if not applied properly
+    case $answer in
+    [sS]* ) echo "                   Synaptics selected!"
+            ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/DSDT.dsl ${tmp_d}/patches/Brightness_Key_Voodoo.txt ${tmp_d}/DSDT/Decompiled/DSDT.dsl >> $patch_log 2>&1
+            break;;
+    [eE]* ) echo "                   ELAN selected!"
+            ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/DSDT.dsl ${tmp_d}/patches/Brightness_Key_ELAN.txt ${tmp_d}/DSDT/Decompiled/DSDT.dsl >> $patch_log 2>&1
+            break;;
+        * ) echo "                   Dude, just enter s(S) or e(E), please.";;
+    esac
+    done
+
+    while true
+    do
+    read -p "     -------->     Do you want to add DSDT debug methods? (y/n) " answer
+    case $answer in
+    [yY]* ) echo "     ...    [debug] Add DSDT Debug Methods"
+            ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/DSDT.dsl ${tmp_d}/patches/debug.txt ${tmp_d}/DSDT/Decompiled/DSDT.dsl >> $patch_log 2>&1
+            break;;
+    [nN]* ) break;;
+        * ) echo "                   Dude, just enter Y or N, please.";;
+    esac
+    done
+
+    while true
+    do
+    read -p "     -------->     Do you want to add _WAK/_PTS debug methods? (y/n) " answer
+    case $answer in
+    [yY]* ) echo "     ...    [debug] Instrument _WAK/_PTS"
+            ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/DSDT.dsl ${tmp_d}/patches/instrument_WAK_PTS.txt ${tmp_d}/DSDT/Decompiled/DSDT.dsl >> $patch_log 2>&1
+            break;;
+    [nN]* ) break;;
+        * ) echo "                   Dude, just enter Y or N, please.";;
+    esac
+    done
+
+    while true
+    do
+    read -p "     -------->     Do you want to add EC Queries debug methods? (y/n) " answer
+    case $answer in
+    [yY]* ) echo "     ...    [debug] Instrument EC Queries"
+            ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/DSDT.dsl ${tmp_d}/patches/instrument_Qxx.txt ${tmp_d}/DSDT/Decompiled/DSDT.dsl >> $patch_log 2>&1
+            break;;
+    [nN]* ) break;;
+        * ) echo "                   Dude, just enter Y or N, please.";;
+    esac
+    done
+    patch_ssdt
+}
+
+patch_ssdt()
+{
+    ########################
+    # SSDT-0 Patches
+    ########################
+
+    echo "${green}${bold}[--SSDT--]${normal}${bold}: Patching SSDT-0 in Decompiled/${normal}"
+    echo "\n    >>>>   SSDT-0 Patch Started   <<<<    \n" >> $patch_log 2>&1   #Logging Purpose Only
+    echo "     ...    Nothing to patch here...moving on..."
+
+    ########################
+    # SSDT-2 Patches
+    ########################
+
+    echo "${green}${bold}[--SSDT--]${normal}${bold}: Patching SSDT-2 in Decompiled/${normal}"
+    echo "\n    >>>>   SSDT-2 Patch Started   <<<<    \n" >> $patch_log 2>&1   #Logging Purpose Only
+    echo "     ...    Nothing to patch here...moving on..."
+
+    ########################
+    # SSDT-3 Patches
+    ########################
+
+    echo "${green}${bold}[--SSDT--]${normal}${bold}: Patching SSDT-3 in Decompiled/${normal}"
+    echo "\n    >>>>   SSDT-3 Patch Started   <<<<    \n" >> $patch_log 2>&1   #Logging Purpose Only
+
+    echo "     ...    [syn] Remove _DSM methods"
+    ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/SSDT-3.dsl ${tmp_d}/patches/remove_DSM.txt ${tmp_d}/DSDT/Decompiled/SSDT-3.dsl >> $patch_log 2>&1
+
+    echo "     ...    [gfx] Rename GFX0 to IGPU"
+    ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/SSDT-3.dsl ${tmp_d}/patches/graphics_Rename-GFX0.txt ${tmp_d}/DSDT/Decompiled/SSDT-3.dsl >> $patch_log 2>&1
+
+    echo "     ...    [gfx] Brightness fix (Haswell)"
+    ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/SSDT-3.dsl ${tmp_d}/patches/graphics_PNLF_haswell.txt ${tmp_d}/DSDT/Decompiled/SSDT-3.dsl >> $patch_log 2>&1
+
+    echo "     ...    [hdm] Rename B0D3 to HDAU"
+    ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/SSDT-3.dsl ${tmp_d}/patches/HDMI.txt ${tmp_d}/DSDT/Decompiled/SSDT-3.dsl >> $patch_log 2>&1
+
+    echo "     ...    [hdm] Add Intel HD4600 HDMI"
+    ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/SSDT-3.dsl ${tmp_d}/patches/Haswell-HDMI.txt ${tmp_d}/DSDT/Decompiled/SSDT-3.dsl >> $patch_log 2>&1
+
+    ########################
+    # SSDT-4 Patches
+    ########################
+
+    echo "${green}${bold}[--SSDT--]${normal}${bold}: Patching SSDT-4 in Decompiled/${normal}"
+    echo "\n    >>>>   SSDT-4 Patch Started   <<<<    \n" >> $patch_log 2>&1   #Logging Purpose Only
+
+    echo "     ...    [syn] Remove _DSM methods"
+    ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/SSDT-4.dsl ${tmp_d}/patches/remove_DSM.txt ${tmp_d}/DSDT/Decompiled/SSDT-4.dsl >> $patch_log 2>&1
+
+    echo "     ...    [syn] Remove WMMX method"
+    ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/SSDT-4.dsl ${tmp_d}/patches/WMMX_remove.txt ${tmp_d}/DSDT/Decompiled/SSDT-4.dsl >> $patch_log 2>&1
+
+    echo "     ...    [gfx] Rename GFX0 to IGPU"
+    ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/SSDT-4.dsl ${tmp_d}/patches/graphics_Rename-GFX0.txt ${tmp_d}/DSDT/Decompiled/SSDT-4.dsl >> $patch_log 2>&1
+
+    echo "     ...    [mine] Compilation"
+    ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/SSDT-4.dsl ${tmp_d}/patches/Compilation.txt ${tmp_d}/DSDT/Decompiled/SSDT-4.dsl >> $patch_log 2>&1
+
+    echo "     ...    [gfx] Disable Nvidia card (Won't work anyway & disabling this saves battery)"
+    ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/SSDT-4.dsl ${tmp_d}/patches/graphics_Disable_Nvidia.txt ${tmp_d}/DSDT/Decompiled/SSDT-4.dsl >> $patch_log 2>&1
+
+    ########################
+    # SSDT-5 Patches
+    ########################
+
+    echo "${green}${bold}[--SSDT--]${normal}${bold}: Patching SSDT-5 in Decompiled/${normal}"
+    echo "\n    >>>>   SSDT-5 Patch Started   <<<<    \n" >> $patch_log 2>&1   #Logging Purpose Only
+    echo "     ...    Nothing to patch here...moving on..."
+
+    ########################
+    # SSDT-6 Patches
+    ########################
+
+    echo "${green}${bold}[--SSDT--]${normal}${bold}: Patching SSDT-6 in Decompiled/${normal}"
+    echo "\n    >>>>   SSDT-6 Patch Started   <<<<    \n" >> $patch_log 2>&1   #Logging Purpose Only
+    echo "     ...    Nothing to patch here...moving on..."
+    compile_dsdt
+}
+
+compile_dsdt()
+{
+    echo "${green}${bold}[(D/S)SDT]${normal}${bold}: Compiling DSDT/SSDT to Compiled/${normal}"
+    echo "\n    >>>>   Compiling Started   <<<<    \n" >> $logFile 2>&1   #Logging Purpose Only
+    echo "     ...    Compiling DSDT...."
+    ./tools/iasl -vr -w1 -ve -p ${tmp_d}/DSDT/Compiled/DSDT.aml -I ${tmp_d}/DSDT/Decompiled ${tmp_d}/DSDT/Decompiled/DSDT.dsl >> $compile_log 2>&1
+
+    echo "     ...    Compiling SSDT-0..."
+    ./tools/iasl -vr -w1 -ve -p ${tmp_d}/DSDT/Compiled/SSDT-0.aml -I ${tmp_d}/DSDT/Decompiled ${tmp_d}/DSDT/Decompiled/SSDT-0.dsl >> $compile_log 2>&1
+
+    echo "     ...    Copying   SSDT-1... (pre-made using ssdtPRgen.sh)"
+    cp -v SSDT/SSDT-1.aml ${tmp_d}/DSDT/Compiled/ >> $compile_log 2>&1
+
+    echo "     ...    Compiling SSDT-2..."
+    ./tools/iasl -vr -w1 -ve -p ${tmp_d}/DSDT/Compiled/SSDT-2.aml -I ${tmp_d}/DSDT/Decompiled ${tmp_d}/DSDT/Decompiled/SSDT-2.dsl >> $compile_log 2>&1
+
+    echo "     ...    Compiling SSDT-3..."
+    ./tools/iasl -vr -w1 -ve -p ${tmp_d}/DSDT/Compiled/SSDT-3.aml -I ${tmp_d}/DSDT/Decompiled ${tmp_d}/DSDT/Decompiled/SSDT-3.dsl >> $compile_log 2>&1
+
+    echo "     ...    Compiling SSDT-4..."
+    ./tools/iasl -vr -w1 -ve -p ${tmp_d}/DSDT/Compiled/SSDT-4.aml -I ${tmp_d}/DSDT/Decompiled ${tmp_d}/DSDT/Decompiled/SSDT-4.dsl >> $compile_log 2>&1
+
+    echo "     ...    Compiling SSDT-5..."
+    ./tools/iasl -vr -w1 -ve -p ${tmp_d}/DSDT/Compiled/SSDT-5.aml -I ${tmp_d}/DSDT/Decompiled ${tmp_d}/DSDT/Decompiled/SSDT-5.dsl >> $compile_log 2>&1
+
+    echo "     ...    Compiling SSDT-6..."
+    ./tools/iasl -vr -w1 -ve -p ${tmp_d}/DSDT/Compiled/SSDT-6.aml -I ${tmp_d}/DSDT/Decompiled ${tmp_d}/DSDT/Decompiled/SSDT-6.dsl >> $compile_log 2>&1
+
+    echo "${green}${bold}[--Done--]${normal}${blue}: ${bold}Very Imp${red} : ${bold}Do NOT forget to check logs!${normal}\n"
+    echo "${green}${bold}[--Done--]${normal}${bold}: Thanks for using this script! Any Feedbacks are welcome!${normal}\n"
+
+#    # Additional custom SSDT
+#    # ssdtPRgen (P-states / C-states)
+#    echo "${BLUE}[DSDT]${OFF}: Compiling ssdtPRgen to Compiled/"
+#
+#    if [[ `sysctl machdep.cpu.brand_string` == *"i7-4702HQ"* ]]
+#    then
+#    echo "${BLUE}[DSDT]${OFF}: Intel ${BOLD}i7-4702HQ${OFF} processor found"
+#    ./tools/./tools/iasl -vr -w1 -ve -p Compiled//SSDT-pr.aml ./DSDT/custom/SSDT-pr-i7-4702HQ.dsl
+#    fi
+#
+#    if [[ `sysctl machdep.cpu.brand_string` == *"i7-4712HQ"* ]]
+#    then
+#    echo "${BLUE}[DSDT]${OFF}: Intel ${BOLD}i7-4712HQ${OFF} processor found"
+#    ./tools/./tools/iasl -vr -w1 -ve -p Compiled//SSDT-pr.aml ./DSDT/custom/SSDT-pr-i7-4712HQ.dsl
+#    fi
+#
+#    # Rehabman NullEthernet.kext
+#    echo "${BLUE}[DSDT]${OFF}: Compiling SSDT-rmne to Compiled/"
+#    ./tools/./tools/iasl -vr -w1 -ve -p Compiled//SSDT-rmne.aml ./DSDT/custom/SSDT-rmne.dsl
+}
+
+# Checking internet connection
+check_internet()
+{
+    if [ $(ping -q -c 1 google.com > /dev/null 2> /dev/null && echo online || echo offline) = "online" ] ; then
+        echo "${green}${bold}[ PreRun ]${normal}${bold}: Internet connection available...switching to ${green}${bold}"Online"${normal}${bold} mode...${normal}"
+        ONLINE="yes"
+        copy_tables
+        decompile_dsdt
+        renaming_ssdt
+        acquire_patches
+        check_patches
+    else
+        echo "${green}${bold}[ PreRun ]${normal}${bold}: Internet connection NOT available...switching to ${red}${bold}"Offline"${normal}${bold} mode...${normal}"
+        OFFLINE="yes"
+        copy_tables
+        decompile_dsdt
+        renaming_ssdt
+        echo "${green}${bold}[ PreRun ]${normal}${bold}: Copying Patches...${normal}"
+        cp -v patches/repo/*.txt ${tmp_d}/patches/ >> /dev/null 2>&1
+        check_patches
+    fi
+}
+
+#Checking OS version
+check_os()
+{
+    if  [ "$ProductVersion" = "10.10.2" ] ; then
+        echo "${green}${bold}[ PreRun ]${normal}: ${blue}${bold}OS X $ProductVersion${normal}${bold} Detected! Continuing...${normal}"
+        check_internet
+    else
+        echo "${green}${bold}[ PreRun ]${normal}: ${red}${bold}OS X $ProductVersion is not supported by this script! Install/Update to ${blue}10.10.2${normal}${bold}! Exiting!${normal}"
+        exit
+    fi
+}
+
+pre_run()
+{
+    echo "\n${red}=============================================================="
+    echo "${green}${bold}Lenevo Ideapad Y510p ${normal}${bold}DSDT/SSDT autopatch script by ${blue}intruder16:${normal}"
+    echo "${red}==============================================================${normal}\n"
+    echo "Brief info about about what this script will do:\n"
+    echo "\t 1. First of all this script does not require any superuser permissions!"
+    echo "\t    you do not need to run this with \"sudo\".\n"
+    echo "\t 2. This script will try to check if a internet connection is available,"
+    echo "\t    if it is then the script will run the \"online\" version that is it will download all"
+    echo "\t    the patches required, if not then it will run the \"offline\" version (little faster)"
+    echo "\t    and use the patches in \"patches/repo/\" folder.\n"
+    echo "\t 3. Now it will copy all the DSDT and SSDT recursively from the folder you specified (must)"
+    echo "\t    to the working directory which is \"tmp/DSDT/\" leaving the originals untouched.\n"
+    echo "\t 4. The copied tables will be decompiled to a new folder \"tmp/DSDT/Decompiled/\" and the"
+    echo "\t    originals will be copied to \"tmp/DSDT/Originals/\" and the SSDT's will be renamed"
+    echo "\t    in order for better injection through clover.\n"
+    echo "\t 5. Now the script will check if all the patches are available by running all the patches.txt"
+    echo "\t    through a patch list specified in patch folder.\n"
+    echo "\t 6. Finally the pacthing of DSDT and SSDT's will start. After that the tables are compiled"
+    echo "\t    and you can see them in \"tmp/DSDT/Compiled/\" folder.\n"
+    echo "\t 7. Most Important : The script will log everything it does in log files inside \"tmp/\""
+    echo "\t    You are ${red}highly advised${normal} to check the logs afterwards to check if everything went OK.\n"
+    echo ""
+    while true
+    do
+        echo "${red}"
+        read -p "Have you read what the script will do and would like to continue?  " answer
+    case $answer in
+    [yY]* ) CONTINUE=true
+            clear
+            if [ -d "tmp/" ] ; then # Check if tmp dir already exists
+                n=$(ls tmp/ | grep tmp\* |  sed 's/^.\{4\}//' | tail -n1) ;
+                if [[ $n =~ ^-?[0-9]+$ ]] ; then
+                    m=$((n + 1)) ;
+                    echo "${green}${bold}[  Info  ]${normal}: ${bold}Looks like you have used this script '${red}${bold}$m${normal}' times (\"${blue}${bold}tmp-'$n'${normal}${bold}\" dir exist!)${normal}" ;
+                    echo "${bold}     ...    Creating one more tmp dir : ${blue}${bold}\"tmp/tmp-$m\"${normal}" ;
+                    mkdir tmp/tmp-"$m" >> /dev/null 2>&1 ;
+                    tmp_d="tmp/tmp-$m"
+                else
+                    n="1"
+                    echo "${green}${bold}[  Info  ]${normal}: ${bold}Looks like you have already used this script once before (\"${blue}${bold}tmp${normal}${bold}\" dir exist!)${normal}" ;
+                    echo "${bold}     ...    BUT, Nothing to worry about! Backing up all contents to ${blue}${bold}\"tmp/tmp-$n\"${normal}" ;
+                    mkdir tmp/tmp-$n >> /dev/null 2>&1 ;
+                    mv -v tmp/* tmp/tmp-$n >> /dev/null 2>&1 ;
+                    m=$((n + 1)) ;
+                    tmp_d="tmp/tmp-$m"
+                fi
+            else
+                tmp_d="tmp"
+            fi
+            check_os
+            break;;
+    [nN]* ) echo ""
+            echo "${red}Please read the script first, it only takes a few minutes."
+            echo ""
+            exit;;
+        * ) echo "${normal}Dude, just enter Y or N, please.${normal}";;
+    esac
+    done
+}
+
+case "$1" in
+    --target|-t)
+        target_dir=$2
+        if [ ! -d "$target_dir" ] ; then echo "${red}${bold}[ ERROR ]${normal} : Directory does not exist! Please specify a valid directory!" ; echo "" ; exit ; fi
+        pre_run
+        ;;
+    --update|-u)
+        pre_run
+        ;;
+    *)
+        echo "\n${cyan}${bold}Lenevo Y510p IdeaPad${normal} - Yosemite 10.10.2"
+        echo "https://github.com/......................\n"
+        echo "\t${bold}--target(-t)${normal}: Path to the directory where your ACPI tables are stored"
+        echo "\t${bold}--update(-u)${normal}: Update to latest git version\n"
+        echo "${blue}IMP: ${red}\"--target(-t)\"${normal} is a must! Files will be copied to the working dir leaving originals untouched."
+        echo "     Tip : Use "'$HOME'" instead of "~" for home folder.\n"
+        echo "Credits:\n"
+        echo "${BLUE}Laptop-DSDT${normal}: https://github.com/RehabMan/Laptop-DSDT-Patch"
+        echo "${BLUE}ssdtPRgen${normal}: https://github.com/Piker-Alpha/ssdtPRGen.sh"
+        echo "${BLUE}Dell XPS 9530${normal}: https://github.com/robvanoostenrijk/XPS9530-OSX\n"
+        ;;
+esac
+
+exit

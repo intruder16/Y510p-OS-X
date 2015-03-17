@@ -1,0 +1,6 @@
+# Created by intruder16
+
+into method label _INI insert
+begin
+	_OFF ()
+end;

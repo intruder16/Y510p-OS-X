@@ -1,0 +1,6 @@
+# Created by intruder16
+
+into method label MHCF code_regex And\s+\(Local0,\s+0x60\) replace_matched
+begin
+And (Local0, 0x60, Local0)
+end;

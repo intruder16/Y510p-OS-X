@@ -1,0 +1,3 @@
+# Created by intruder16
+
+into method label WMMX parent_label WMI1 remove_entry;
