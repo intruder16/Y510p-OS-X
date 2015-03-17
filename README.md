@@ -46,3 +46,11 @@ Run the script
 ./Y510p.sh
 ```
 The script will guide you through the process.
+
+#Credits:
+
+Laptop-DSDT: https://github.com/RehabMan/Laptop-DSDT-Patch  (for all the pacthes)
+
+Pike R Alpha: https://github.com/Piker-Alpha/ssdtPRGen.sh  (for the CPUSpeedStep SSDT pacth)
+
+Dell XPS 9530: https://github.com/robvanoostenrijk/XPS9530-OSX (for the idea)
