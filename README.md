@@ -1,9 +1,9 @@
 # OS X Yosemite on Lenevo Ideapad Y510p
 
-This repository contains all the necessary patches and a autopacther script for DSDT/SSDT's on Y510p.
+This repository contains all the necessary patches and an autopatcher script for DSDT/SSDT's on Y510p.
 
 This script is created for the fact that if you change BIOS settings (a headache for those who have a modded BIOS)
-you will have to re-extract and re-patch the ACPI tables so that you will always have a pacthed DSDT specifically
+you will have to re-extract and re-patch the ACPI tables so that you will always have a patched DSDT specifically
 for your BIOS settings. What happens is for some settings you change in BIOS the result is reflected in your ACPI tables.
 So if you use someone else's DSDT there may be unexplained behavior on your end (coz both of them are created under different 
 settings).
@@ -49,8 +49,8 @@ The script will guide you through the process.
 
 #Credits:
 
-Laptop-DSDT: https://github.com/RehabMan/Laptop-DSDT-Patch  (for all the pacthes)
+Laptop-DSDT: https://github.com/RehabMan/Laptop-DSDT-Patch  (for all the patches)
 
-Pike R Alpha: https://github.com/Piker-Alpha/ssdtPRGen.sh  (for the CPUSpeedStep SSDT pacth)
+Pike R Alpha: https://github.com/Piker-Alpha/ssdtPRGen.sh  (for the CPUSpeedStep SSDT patch)
 
 Dell XPS 9530: https://github.com/robvanoostenrijk/XPS9530-OSX (for the idea)
