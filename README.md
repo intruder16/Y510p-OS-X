@@ -58,7 +58,7 @@ NOTE: You must specify (--target/-t ) a target folder (containing extracted DSDT
 
 For more info visit:
 
-http://www.insanelymac.com/forum/topic/303276-guide-for-installing-os-x-yosemite-on-lenovo-ideapad-y510p/page-10#entry2120670
+http://www.insanelymac.com/forum/topic/305122-dsdtssdt-auto-patcher-for-lenovo-y510p-ideapad/
 
 
 #Credits:
