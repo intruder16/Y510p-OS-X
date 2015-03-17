@@ -56,6 +56,11 @@ The script will guide you through the process.
 
 NOTE: You must specify (--target/-t ) a target folder (containing extracted DSDT/SSDT's)
 
+For more info visit:
+
+http://www.insanelymac.com/forum/topic/303276-guide-for-installing-os-x-yosemite-on-lenovo-ideapad-y510p/page-10#entry2120670
+
+
 #Credits:
 
 Laptop-DSDT: https://github.com/RehabMan/Laptop-DSDT-Patch  (for all the patches)
