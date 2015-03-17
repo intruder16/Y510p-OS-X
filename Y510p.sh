@@ -347,6 +347,7 @@ compile_dsdt()
     echo "     ...    Compiling SSDT-0..."
     ./tools/iasl -vr -w1 -ve -p ${tmp_d}/DSDT/Compiled/SSDT-0.aml -I ${tmp_d}/DSDT/Decompiled ${tmp_d}/DSDT/Decompiled/SSDT-0.dsl >> $compile_log 2>&1
 
+    # Using pre-made SSDT by using ssdtPRgen.sh
     echo "     ...    Copying   SSDT-1... (pre-made using ssdtPRgen.sh)"
     cp -v SSDT/SSDT-1.aml ${tmp_d}/DSDT/Compiled/ >> $compile_log 2>&1
 
@@ -367,26 +368,6 @@ compile_dsdt()
 
     echo "${green}${bold}[--Done--]${normal}${blue}: ${bold}Very Imp${red} : ${bold}Do NOT forget to check logs!${normal}\n"
     echo "${green}${bold}[--Done--]${normal}${bold}: Thanks for using this script! Any Feedbacks are welcome!${normal}\n"
-
-#    # Additional custom SSDT
-#    # ssdtPRgen (P-states / C-states)
-#    echo "${BLUE}[DSDT]${OFF}: Compiling ssdtPRgen to Compiled/"
-#
-#    if [[ `sysctl machdep.cpu.brand_string` == *"i7-4702HQ"* ]]
-#    then
-#    echo "${BLUE}[DSDT]${OFF}: Intel ${BOLD}i7-4702HQ${OFF} processor found"
-#    ./tools/./tools/iasl -vr -w1 -ve -p Compiled//SSDT-pr.aml ./DSDT/custom/SSDT-pr-i7-4702HQ.dsl
-#    fi
-#
-#    if [[ `sysctl machdep.cpu.brand_string` == *"i7-4712HQ"* ]]
-#    then
-#    echo "${BLUE}[DSDT]${OFF}: Intel ${BOLD}i7-4712HQ${OFF} processor found"
-#    ./tools/./tools/iasl -vr -w1 -ve -p Compiled//SSDT-pr.aml ./DSDT/custom/SSDT-pr-i7-4712HQ.dsl
-#    fi
-#
-#    # Rehabman NullEthernet.kext
-#    echo "${BLUE}[DSDT]${OFF}: Compiling SSDT-rmne to Compiled/"
-#    ./tools/./tools/iasl -vr -w1 -ve -p Compiled//SSDT-rmne.aml ./DSDT/custom/SSDT-rmne.dsl
 }
 
 # Checking internet connection
@@ -415,13 +396,8 @@ check_internet()
 #Checking OS version
 check_os()
 {
-    if  [ "$ProductVersion" = "10.10.2" ] ; then
         echo "${green}${bold}[ PreRun ]${normal}: ${blue}${bold}OS X $ProductVersion${normal}${bold} Detected! Continuing...${normal}"
         check_internet
-    else
-        echo "${green}${bold}[ PreRun ]${normal}: ${red}${bold}OS X $ProductVersion is not supported by this script! Install/Update to ${blue}10.10.2${normal}${bold}! Exiting!${normal}"
-        exit
-    fi
 }
 
 pre_run()
@@ -497,14 +473,14 @@ case "$1" in
         ;;
     *)
         echo "\n${cyan}${bold}Lenevo Y510p IdeaPad${normal} - Yosemite 10.10.2"
-        echo "https://github.com/......................\n"
+        echo "https://github.com/intruder16/Y510p-OS-X\n"
         echo "\t${bold}--target(-t)${normal}: Path to the directory where your ACPI tables are stored"
         echo "\t${bold}--update(-u)${normal}: Update to latest git version\n"
         echo "${blue}IMP: ${red}\"--target(-t)\"${normal} is a must! Files will be copied to the working dir leaving originals untouched."
         echo "     Tip : Use "'$HOME'" instead of "~" for home folder.\n"
         echo "Credits:\n"
         echo "${BLUE}Laptop-DSDT${normal}: https://github.com/RehabMan/Laptop-DSDT-Patch"
-        echo "${BLUE}ssdtPRgen${normal}: https://github.com/Piker-Alpha/ssdtPRGen.sh"
+        echo "${BLUE}Pike R Aplha${normal}: https://github.com/Piker-Alpha/ssdtPRGen.sh"
         echo "${BLUE}Dell XPS 9530${normal}: https://github.com/robvanoostenrijk/XPS9530-OSX\n"
         ;;
 esac
