@@ -45,7 +45,14 @@ Run the script
 ```javascript
 ./Y510p.sh
 ```
+
+```javascript
+./Y510p.sh -t "target dir"
+```
+
 The script will guide you through the process.
+
+NOTE: You must specify (--target/-t ) a target folder (containing extracted DSDT/SSDT's)
 
 #Credits:
 
