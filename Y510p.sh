@@ -470,7 +470,10 @@ case "$1" in
         pre_run
         ;;
     --update|-u)
-        pre_run
+        echo "${green}${bold}[---GIT--]${normal}${bold}: Updating to latest Y510p-OS-X git master....${normal}"
+        git pull
+        echo "${green}${bold}[---GIT--]${normal}${bold}: Updated successfully....${normal}"
+        exit
         ;;
     *)
         echo "\n${cyan}${bold}Lenevo Y510p IdeaPad${normal} - Yosemite 10.10.2"
