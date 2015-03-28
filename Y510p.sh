@@ -23,6 +23,13 @@
 #               Now the script will look at the contents of SSDT and patch it with required patches.
 #           -Added brief description at the start of script about what it is going to do.
 
+#   v1.2 :
+#           -Cleanup -Removed Bogus SSDT's
+#                    -Using "OS Check Windows 12" patch now.
+#           -Added choice for "LID Sleep"
+#           -Added choice for "Wake On USB"
+#           -Added an option to use native CPU PM SSDT, but that's experimental and that's why commented.
+
 clear # Make some space xD
 
 # Script version
@@ -93,10 +100,15 @@ renaming_ssdt()
     grep _PDC ${tmp_d}/DSDT/Decompiled/SSDT* | awk '{print $1}' | sed 's/://' | head -1 | xargs -I {} mv -v {} ${tmp_d}/DSDT/Decompiled/SSDT-2.dsl >> $logFile 2>&1
     grep 0x00020000 ${tmp_d}/DSDT/Decompiled/SSDT* | awk '{print $1}' | sed 's/://' | head -1 | xargs -I {} mv -v {} ${tmp_d}/DSDT/Decompiled/SSDT-3.dsl >> $logFile 2>&1
     grep SB.PCI0.PEG0.PEGP ${tmp_d}/DSDT/Decompiled/SSDT* | awk '{print $1}' | sed 's/://' | head -1 | xargs -I {} mv -v {} ${tmp_d}/DSDT/Decompiled/SSDT-4.dsl >> $logFile 2>&1
-    grep C1TM ${tmp_d}/DSDT/Decompiled/SSDT* | awk '{print $1}' | sed 's/://' | head -1 | xargs -I {} mv -v {} ${tmp_d}/DSDT/Decompiled/SSDT-5.dsl >> $logFile 2>&1
-    grep PR.CPU0._CST ${tmp_d}/DSDT/Decompiled/SSDT* | awk '{print $1}' | sed 's/://' | head -1 | xargs -I {} mv -v {} ${tmp_d}/DSDT/Decompiled/SSDT-6.dsl >> $logFile 2>&1
+    # SSDT2.dsl -> you can try it for native CPU PM (might cause KP) For now i'll leave it
+    # grep PR.CPPC ${tmp_d}/DSDT/Decompiled/SSDT* | awk '{print $1}' | sed 's/://' | head -1 | xargs -I {} mv -v {} ${tmp_d}/DSDT/Decompiled/SSDT-1.dsl >> $logFile 2>&1
     grep PR.CPPC ${tmp_d}/DSDT/Decompiled/SSDT* | awk '{print $1}' | sed 's/://' | head -1 | xargs -I {} mv -v {} ${tmp_d}/DSDT/Decompiled/Not\ Needed/ >> $logFile 2>&1
+    # SSDT6.dsl (if linux)
+    grep C1TM ${tmp_d}/DSDT/Decompiled/SSDT* | awk '{print $1}' | sed 's/://' | head -1 | xargs -I {} mv -v {} ${tmp_d}/DSDT/Decompiled/Not\ Needed/ >> $logFile 2>&1
+    # SSDT7.dsl (if linux)
     grep PR.CPU0._PCT ${tmp_d}/DSDT/Decompiled/SSDT* | awk '{print $1}' | sed 's/://' | head -1 | xargs -I {} mv -v {} ${tmp_d}/DSDT/Decompiled/Not\ Needed/ >> $logFile 2>&1
+    # SSDT8.dsl (if linux)
+    grep PR.CPU0._CST ${tmp_d}/DSDT/Decompiled/SSDT* | awk '{print $1}' | sed 's/://' | head -1 | xargs -I {} mv -v {} ${tmp_d}/DSDT/Decompiled/Not\ Needed/ >> $logFile 2>&1
 }
 
 acquire_patches()
@@ -109,7 +121,10 @@ acquire_patches()
     curl -o ${tmp_d}/patches/system_SMBUS.txt https://raw.githubusercontent.com/RehabMan/Laptop-DSDT-Patch/master/system/system_SMBUS.txt >> $logFile 2>&1
     curl -o ${tmp_d}/patches/system_IRQ.txt https://raw.githubusercontent.com/RehabMan/Laptop-DSDT-Patch/master/system/system_IRQ.txt >> $logFile 2>&1
     curl -o ${tmp_d}/patches/system_RTC.txt https://raw.githubusercontent.com/RehabMan/Laptop-DSDT-Patch/master/system/system_RTC.txt >> $logFile 2>&1
+    # OS check Vista patch
     curl -o ${tmp_d}/patches/system_OSYS.txt https://raw.githubusercontent.com/RehabMan/Laptop-DSDT-Patch/master/system/system_OSYS.txt >> $logFile 2>&1
+    # OS Check Windows 12 patch (Using this for now)
+    curl -o ${tmp_d}/patches/system_OSYS_win8.txt https://raw.githubusercontent.com/RehabMan/Laptop-DSDT-Patch/master/system/system_OSYS_win8.txt >> $logFile 2>&1
     curl -o ${tmp_d}/patches/system_Mutex.txt https://raw.githubusercontent.com/RehabMan/Laptop-DSDT-Patch/master/system/system_Mutex.txt >> $logFile 2>&1
     curl -o ${tmp_d}/patches/system_PNOT.txt https://raw.githubusercontent.com/RehabMan/Laptop-DSDT-Patch/master/system/system_PNOT.txt >> $logFile 2>&1
     curl -o ${tmp_d}/patches/system_IMEI.txt https://raw.githubusercontent.com/RehabMan/Laptop-DSDT-Patch/master/system/system_IMEI.txt >> $logFile 2>&1
@@ -120,6 +135,8 @@ acquire_patches()
     curl -o ${tmp_d}/patches/instrument_WAK_PTS.txt https://raw.githubusercontent.com/RehabMan/OS-X-ACPI-Debug/master/instrument_WAK_PTS.txt >> $logFile 2>&1
     curl -o ${tmp_d}/patches/instrument_Qxx.txt https://raw.githubusercontent.com/RehabMan/OS-X-ACPI-Debug/master/instrument_Qxx.txt >> $logFile 2>&1
     curl -o ${tmp_d}/patches/graphics_PNLF_haswell.txt https://raw.githubusercontent.com/RehabMan/Laptop-DSDT-Patch/master/graphics/graphics_PNLF_haswell.txt >> $logFile 2>&1
+    curl -o ${tmp_d}/patches/misc_Lid_PRW.txt https://raw.githubusercontent.com/RehabMan/Laptop-DSDT-Patch/master/misc/misc_Lid_PRW.txt >> $logFile 2>&1
+    curl -o ${tmp_d}/patches/syntax_ppc.txt https://raw.githubusercontent.com/RehabMan/Lenovo-U430-Touch-DSDT-Patch/master/patches/syntax_ppc.txt >> $logFile 2>&1
 }
 
 check_patches()
@@ -178,8 +195,9 @@ patch_dsdt()
     echo "     ...    [sys] Add IMEI"
     ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/DSDT.dsl ${tmp_d}/patches/system_IMEI.txt ${tmp_d}/DSDT/Decompiled/DSDT.dsl >> $patch_log 2>&1
 
+    # Using Windows 12 patch for now
     echo "     ...    [sys] OS Check Fix"
-    ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/DSDT.dsl ${tmp_d}/patches/system_OSYS.txt ${tmp_d}/DSDT/Decompiled/DSDT.dsl >> $patch_log 2>&1
+    ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/DSDT.dsl ${tmp_d}/patches/system_OSYS_win8.txt ${tmp_d}/DSDT/Decompiled/DSDT.dsl >> $patch_log 2>&1
 
     echo "     ...    [sys] SMBus Fix"
     ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/DSDT.dsl ${tmp_d}/patches/system_SMBUS.txt ${tmp_d}/DSDT/Decompiled/DSDT.dsl >> $patch_log 2>&1
@@ -236,6 +254,31 @@ patch_dsdt()
 
     while true
     do
+    read -p "     -------->     Do you want \"Wake on USB?\" (clicking mouse will wake from sleep)? (y/n) " answer
+    case $answer in
+    [yY]* ) echo "     ...    That's already enabled xD"
+            break;;
+    [nN]* ) echo "     ...    [mine] Disable Wake on USB"
+            ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/DSDT.dsl ${tmp_d}/patches/usb.txt ${tmp_d}/DSDT/Decompiled/DSDT.dsl >> $patch_log 2>&1
+            break;;
+        * ) echo "                   Dude, just enter Y or N, please.";;
+    esac
+    done
+
+    while true
+    do
+    read -p "     -------->     Do you want to enable LID sleep (closing the lid will put the pc to sleep)? (y/n) " answer
+    case $answer in
+    [yY]* ) echo "     ...    [misc] Enable LID Sleep"
+        ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/DSDT.dsl ${tmp_d}/patches/misc_Lid_PRW.txt ${tmp_d}/DSDT/Decompiled/DSDT.dsl >> $patch_log 2>&1
+        break;;
+    [nN]* ) break;;
+        * ) echo "                   Dude, just enter Y or N, please.";;
+    esac
+    done
+
+    while true
+    do
     read -p "     -------->     Do you want to add DSDT debug methods? (y/n) " answer
     case $answer in
     [yY]* ) echo "     ...    [debug] Add DSDT Debug Methods"
@@ -281,6 +324,16 @@ patch_ssdt()
     echo "${green}${bold}[--SSDT--]${normal}${bold}: Patching SSDT-0 in Decompiled/${normal}"
     echo "\n    >>>>   SSDT-0 Patch Started   <<<<    \n" >> $patch_log 2>&1   #Logging Purpose Only
     echo "     ...    Nothing to patch here...moving on..."
+
+    ########################
+    # SSDT-1 Patches
+    ########################
+
+# Read Line 96
+#    echo "${green}${bold}[--SSDT--]${normal}${bold}: Patching SSDT-1 in Decompiled/${normal}"
+#    echo "\n    >>>>   SSDT-1 Patch Started   <<<<    \n" >> $patch_log 2>&1   #Logging Purpose Only
+#    echo "     ...    [syn] Remove Bogus Packages"
+#    ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/SSDT-1.dsl ${tmp_d}/patches/syntax_ppc.txt ${tmp_d}/DSDT/Decompiled/SSDT-3.dsl >> $patch_log 2>&1
 
     ########################
     # SSDT-2 Patches
@@ -333,22 +386,6 @@ patch_ssdt()
 
     echo "     ...    [gfx] Disable Nvidia card (Won't work anyway & disabling this saves battery)"
     ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/SSDT-4.dsl ${tmp_d}/patches/graphics_Disable_Nvidia.txt ${tmp_d}/DSDT/Decompiled/SSDT-4.dsl >> $patch_log 2>&1
-
-    ########################
-    # SSDT-5 Patches
-    ########################
-
-    echo "${green}${bold}[--SSDT--]${normal}${bold}: Patching SSDT-5 in Decompiled/${normal}"
-    echo "\n    >>>>   SSDT-5 Patch Started   <<<<    \n" >> $patch_log 2>&1   #Logging Purpose Only
-    echo "     ...    Nothing to patch here...moving on..."
-
-    ########################
-    # SSDT-6 Patches
-    ########################
-
-    echo "${green}${bold}[--SSDT--]${normal}${bold}: Patching SSDT-6 in Decompiled/${normal}"
-    echo "\n    >>>>   SSDT-6 Patch Started   <<<<    \n" >> $patch_log 2>&1   #Logging Purpose Only
-    echo "     ...    Nothing to patch here...moving on..."
     compile_dsdt
 }
 
@@ -366,6 +403,9 @@ compile_dsdt()
     echo "     ...    Copying   SSDT-1... (pre-made using ssdtPRgen.sh)"
     cp -v SSDT/SSDT-1.aml ${tmp_d}/DSDT/Compiled/ >> $compile_log 2>&1
 
+#    echo "     ...    Compiling SSDT-1..."
+#    ./tools/iasl -vr -w1 -ve -p ${tmp_d}/DSDT/Compiled/SSDT-1.aml -I ${tmp_d}/DSDT/Decompiled ${tmp_d}/DSDT/Decompiled/SSDT-1.dsl >> $compile_log 2>&1
+
     echo "     ...    Compiling SSDT-2..."
     ./tools/iasl -vr -w1 -ve -p ${tmp_d}/DSDT/Compiled/SSDT-2.aml -I ${tmp_d}/DSDT/Decompiled ${tmp_d}/DSDT/Decompiled/SSDT-2.dsl >> $compile_log 2>&1
 
@@ -374,12 +414,6 @@ compile_dsdt()
 
     echo "     ...    Compiling SSDT-4..."
     ./tools/iasl -vr -w1 -ve -p ${tmp_d}/DSDT/Compiled/SSDT-4.aml -I ${tmp_d}/DSDT/Decompiled ${tmp_d}/DSDT/Decompiled/SSDT-4.dsl >> $compile_log 2>&1
-
-    echo "     ...    Compiling SSDT-5..."
-    ./tools/iasl -vr -w1 -ve -p ${tmp_d}/DSDT/Compiled/SSDT-5.aml -I ${tmp_d}/DSDT/Decompiled ${tmp_d}/DSDT/Decompiled/SSDT-5.dsl >> $compile_log 2>&1
-
-    echo "     ...    Compiling SSDT-6..."
-    ./tools/iasl -vr -w1 -ve -p ${tmp_d}/DSDT/Compiled/SSDT-6.aml -I ${tmp_d}/DSDT/Decompiled ${tmp_d}/DSDT/Decompiled/SSDT-6.dsl >> $compile_log 2>&1
 
     echo "\n${green}${bold}[--Done--]${normal}${bold}: All done...${normal}\n"
     echo "${green}${bold}[--Done--]${normal}${blue}: ${bold}Very Imp${red} : ${bold}Do NOT forget to check logs inside ${blue}\"${tmp_d}/\"!${normal}\n"
