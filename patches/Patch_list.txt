@@ -13,6 +13,7 @@ system_SMBUS.txt
 system_IRQ.txt
 system_RTC.txt
 system_OSYS.txt
+system_OSYS_win8.txt
 system_Mutex.txt
 system_PNOT.txt
 system_IMEI.txt
@@ -27,3 +28,6 @@ Fix_Error.txt
 WMMX_remove.txt
 Compilation.txt
 Haswell-HDMI.txt
+misc_Lid_PRW.txt
+usb.txt
+syntax_ppc.txt
