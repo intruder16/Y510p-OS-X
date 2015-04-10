@@ -33,7 +33,7 @@
 clear # Make some space xD
 
 # Script version
-sVersion=1.1
+sVersion=1.2
 
 # Set the colours you can use
 black='\033[0;30m'
