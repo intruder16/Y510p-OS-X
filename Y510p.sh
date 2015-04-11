@@ -11,7 +11,7 @@
 #
 #   v1.1 :
 #           -Internet check - the script will check for internet conn. if its available it will download all up-to-date patches required else it will use patches from "patches/" folder (i'll keep them up-to-date)
-#           Multiple runs - if you run the script more than once, you won't have to worry about previous leftovers they won't be overwritten simply copied to new folder inside "tmp/" like "tmp-1", "tmp-2" etc.
+#           -Multiple runs - if you run the script more than once, you won't have to worry about previous leftovers they won't be overwritten simply copied to new folder inside "tmp/" like "tmp-1", "tmp-2" etc.
 #           -Added "logging system"
 #           -Added "patches check"
 #           -Added choice for both Synaptics & ELAN Touchpad users (needed for brightness keys to work)
@@ -30,10 +30,15 @@
 #           -Added choice for "Wake On USB"
 #           -Added an option to use native CPU PM SSDT, but that's experimental and that's why commented.
 
+#   v1.3 :
+#           -Added "MCHC" patch
+#           -patches updated for offline use
+
+
 clear # Make some space xD
 
 # Script version
-sVersion=1.2
+sVersion=1.3
 
 # Set the colours you can use
 black='\033[0;30m'
@@ -101,6 +106,7 @@ renaming_ssdt()
     grep 0x00020000 ${tmp_d}/DSDT/Decompiled/SSDT* | awk '{print $1}' | sed 's/://' | head -1 | xargs -I {} mv -v {} ${tmp_d}/DSDT/Decompiled/SSDT-3.dsl >> $logFile 2>&1
     grep SB.PCI0.PEG0.PEGP ${tmp_d}/DSDT/Decompiled/SSDT* | awk '{print $1}' | sed 's/://' | head -1 | xargs -I {} mv -v {} ${tmp_d}/DSDT/Decompiled/SSDT-4.dsl >> $logFile 2>&1
     # SSDT2.dsl -> you can try it for native CPU PM (might cause KP) For now i'll leave it
+    # Note : No need to patch PNOT if included
     # grep PR.CPPC ${tmp_d}/DSDT/Decompiled/SSDT* | awk '{print $1}' | sed 's/://' | head -1 | xargs -I {} mv -v {} ${tmp_d}/DSDT/Decompiled/SSDT-1.dsl >> $logFile 2>&1
     grep PR.CPPC ${tmp_d}/DSDT/Decompiled/SSDT* | awk '{print $1}' | sed 's/://' | head -1 | xargs -I {} mv -v {} ${tmp_d}/DSDT/Decompiled/Not\ Needed/ >> $logFile 2>&1
     # SSDT6.dsl (if linux)
@@ -137,6 +143,7 @@ acquire_patches()
     curl -o ${tmp_d}/patches/graphics_PNLF_haswell.txt https://raw.githubusercontent.com/RehabMan/Laptop-DSDT-Patch/master/graphics/graphics_PNLF_haswell.txt >> $logFile 2>&1
     curl -o ${tmp_d}/patches/misc_Lid_PRW.txt https://raw.githubusercontent.com/RehabMan/Laptop-DSDT-Patch/master/misc/misc_Lid_PRW.txt >> $logFile 2>&1
     curl -o ${tmp_d}/patches/syntax_ppc.txt https://raw.githubusercontent.com/RehabMan/Lenovo-U430-Touch-DSDT-Patch/master/patches/syntax_ppc.txt >> $logFile 2>&1
+    curl -o ${tmp_d}/patches/system_MCHC.txt https://raw.githubusercontent.com/RehabMan/Laptop-DSDT-Patch/master/system/system_MCHC.txt >> $logFile 2>&1
 }
 
 check_patches()
@@ -194,6 +201,9 @@ patch_dsdt()
 
     echo "     ...    [sys] Add IMEI"
     ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/DSDT.dsl ${tmp_d}/patches/system_IMEI.txt ${tmp_d}/DSDT/Decompiled/DSDT.dsl >> $patch_log 2>&1
+
+    echo "     ...    [sys] Add MCHC"
+    ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/DSDT.dsl ${tmp_d}/patches/system_MCHC.txt ${tmp_d}/DSDT/Decompiled/DSDT.dsl >> $patch_log 2>&1
 
     # Using Windows 12 patch for now
     echo "     ...    [sys] OS Check Fix"
@@ -329,7 +339,7 @@ patch_ssdt()
     # SSDT-1 Patches
     ########################
 
-# Read Line 96
+# Read Line 108
 #    echo "${green}${bold}[--SSDT--]${normal}${bold}: Patching SSDT-1 in Decompiled/${normal}"
 #    echo "\n    >>>>   SSDT-1 Patch Started   <<<<    \n" >> $patch_log 2>&1   #Logging Purpose Only
 #    echo "     ...    [syn] Remove Bogus Packages"

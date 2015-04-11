@@ -31,3 +31,4 @@ Haswell-HDMI.txt
 misc_Lid_PRW.txt
 usb.txt
 syntax_ppc.txt
+system_MCHC.txt
