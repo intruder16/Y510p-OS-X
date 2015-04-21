@@ -33,7 +33,7 @@
 #           -patches updated for offline use
 #   v1.4 :
 #           -Added new option (-k) to keep all SSDT's
-#           -using only 2 OEM SSDT's (iGPU & dGPU) now
+#           -using only 2 OEM SSDT's (iGPU & dGPU) by default
 #           -minor improvements/optimizations
 #           -using "getops" now
 
