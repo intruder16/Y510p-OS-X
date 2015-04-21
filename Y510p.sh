@@ -36,6 +36,7 @@
 #           -using only 2 OEM SSDT's (iGPU & dGPU) by default
 #           -minor improvements/optimizations
 #           -using "getops" now
+#           -added new CPU SSDT for 10.10.3 & SMBIOS MacBookPro 11,2
 
 
 clear # Make some space xD
