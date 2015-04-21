@@ -45,7 +45,7 @@ chmod +x Y510p.sh
 ```
 Run the script
 ```javascript
-./Y510p.sh
+./Y510p.sh -h
 ```
 
 ```javascript
