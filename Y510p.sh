@@ -22,17 +22,19 @@
 #               If extracted using clover then ssdt-0, ssdt-1, ssd-2, ssdt3x, ssdt-4x etc.
 #               Now the script will look at the contents of SSDT and patch it with required patches.
 #           -Added brief description at the start of script about what it is going to do.
-
 #   v1.2 :
 #           -Cleanup -Removed Bogus SSDT's
 #                    -Using "OS Check Windows 12" patch now.
 #           -Added choice for "LID Sleep"
 #           -Added choice for "Wake On USB"
 #           -Added an option to use native CPU PM SSDT, but that's experimental and that's why commented.
-
 #   v1.3 :
 #           -Added "MCHC" patch
 #           -patches updated for offline use
+#   v1.4 :
+#           -Added new option (-k) to keep all SSDT's
+#           -minor improvements/optimizations
+#           -using "getops" now
 
 
 clear # Make some space xD
