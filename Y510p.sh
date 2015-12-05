@@ -188,7 +188,6 @@ acquire_patches()
     curl -o ${tmp_d}/patches/instrument_Qxx.txt https://raw.githubusercontent.com/RehabMan/OS-X-ACPI-Debug/master/instrument_Qxx.txt >> $logFile 2>&1
     curl -o ${tmp_d}/patches/graphics_PNLF_haswell.txt https://raw.githubusercontent.com/RehabMan/Laptop-DSDT-Patch/master/graphics/graphics_PNLF_haswell.txt >> $logFile 2>&1
     curl -o ${tmp_d}/patches/misc_Lid_PRW.txt https://raw.githubusercontent.com/RehabMan/Laptop-DSDT-Patch/master/misc/misc_Lid_PRW.txt >> $logFile 2>&1
-    curl -o ${tmp_d}/patches/syntax_ppc.txt https://raw.githubusercontent.com/RehabMan/Lenovo-U430-Touch-DSDT-Patch/master/patches/syntax_ppc.txt >> $logFile 2>&1
     curl -o ${tmp_d}/patches/system_MCHC.txt https://raw.githubusercontent.com/RehabMan/Laptop-DSDT-Patch/master/system/system_MCHC.txt >> $logFile 2>&1
 }
 
