@@ -1,6 +1,6 @@
 ACPIKeyboard.txt
 BatteryManagement.txt
-Brightness_Key_ELAN.txt
+Brightness_Key_SmartTouchPad.txt
 Brightness_Key_Voodoo.txt
 graphics_Disable_Nvidia.txt
 HDMI.txt
