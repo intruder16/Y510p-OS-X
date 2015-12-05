@@ -37,12 +37,16 @@
 #           -minor improvements/optimizations
 #           -using "getops" now
 #           -added new CPU SSDT for 10.10.3 & SMBIOS MacBookPro 11,2
+#   v1.5 :
+#           -Added support for El Caiptan 10.11 & above
+#           -Added support for SmartTouchpad users for both Synaptic & ELAN touchpads
+#           -minor improvements/optimizations
 
 
 clear # Make some space xD
 
 # Script version
-sVersion=1.4
+sVersion=1.5
 
 # Set the colours you can use
 black='\033[0;30m'
@@ -62,7 +66,10 @@ CONTINUE=false
 # Keep all SSDT's to 0 (flase) by default
 keep_all="0"
 
-# The version info of the running system i.e. '10.10.2'
+# OS version i.e. 'Yosemite' etc
+OSVersion="$(system_profiler SPSoftwareDataType | awk '/Volume/ {print $3,$4}')"
+
+# The version info of the running system i.e. '10.10.2' etc
 ProductVersion="$(sw_vers -productVersion)"
 
 copy_tables()
@@ -85,6 +92,11 @@ copy_tables()
     # Copying patches
     echo "\n    >>>>   Copying Pacthes   <<<<    \n" >> $logFile 2>&1   #Logging Purpose Only
     cp -v patches/mine/*.txt ${tmp_d}/patches/  >> $logFile 2>&1
+    # Modify usb patch if El Capitan detected
+    if [ "$OSVersion" == "El Capitan" ] ; then
+    	echo "Removing conflicting code from ${tmp_d}/patches/usb.txt" >> $logFile 2>&1   #Logging Purpose Only
+        sed -i '' '/# rename XHC to XHC1/,$d' ${tmp_d}/patches/usb.txt
+    fi
     # Copying orig DSDT/SSDT's
     echo "\n    >>>>   Copying DSDT/SSDT's   <<<<    \n" >> $logFile 2>&1   #Logging Purpose Only
     cp -v "${target_dir}/DSDT"*"" "${tmp_d}/DSDT/" >> $logFile 2>&1
@@ -285,16 +297,18 @@ patch_dsdt()
 
     while true
     do
-    read -p "     -------->     Which touchpad do you have? Synaptics (Default) or ELAN?  (Synaptics[s]/ELAN[e])  " answer
+    read -p "     -------->     Which touchpad kext will you use? VoodooPS2Controller or SmartTouchPad? (VoodooPS2Controller[v]/SmartTouchPad[s])  " answer
+    
     #Thats asked because both VoodooPS2 & ELAN comes with their on versions of keyboard and can break brightness key function if not applied properly
     case $answer in
-    [sS]* ) echo "                   Synaptics selected!"
+    [vV]* ) echo "                   VoodooPS2Controller selected!"
+    		echo "                   Tip : For best results use SmartTouchpad!"
             ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/DSDT.dsl ${tmp_d}/patches/Brightness_Key_Voodoo.txt ${tmp_d}/DSDT/Decompiled/DSDT.dsl >> $patch_log 2>&1
             break;;
-    [eE]* ) echo "                   ELAN selected!"
-            ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/DSDT.dsl ${tmp_d}/patches/Brightness_Key_ELAN.txt ${tmp_d}/DSDT/Decompiled/DSDT.dsl >> $patch_log 2>&1
+    [sS]* ) echo "                   SmartTouchPad selected!"
+            ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/DSDT.dsl ${tmp_d}/patches/Brightness_Key_SmartTouchPad.txt ${tmp_d}/DSDT/Decompiled/DSDT.dsl >> $patch_log 2>&1
             break;;
-        * ) echo "                   Dude, just enter s(S) or e(E), please.";;
+        * ) echo "                   Dude, just enter v(V) or s(S), please.";;
     esac
     done
 
@@ -553,7 +567,7 @@ check_internet()
 #Checking OS version
 check_os()
 {
-        echo "${green}${bold}[ PreRun ]${normal}: ${blue}${bold}OS X $ProductVersion${normal}${bold} Detected! Continuing...${normal}"
+        echo "${green}${bold}[ PreRun ]${normal}: ${blue}${bold}OS X $OSVersion $ProductVersion${normal}${bold} Detected! Continuing...${normal}"
         check_internet
 }
 
@@ -622,8 +636,9 @@ echo "$keep_all"
 
 update()
 {
-    echo "\n${cyan}${bold}Lenevo Y510p IdeaPad${normal} - Yosemite $ProductVersion"
-    echo "https://github.com/intruder16/Y510p-OS-X\n"
+    echo "\n${cyan}${bold}Lenevo Y510p IdeaPad${normal} - (For Yosemite & up)"
+    echo ""
+    echo "Visit source : https://github.com/intruder16/Y510p-OS-X\n"
     echo "Script version \"${green}v$sVersion${normal}\"\n"
     echo "${green}${bold}[---GIT--]${normal}${bold}: Updating to latest Y510p-OS-X git master....${normal}"
     git pull >> /dev/null 2>&1
@@ -634,8 +649,9 @@ update()
 
 usage()
 {
-    echo "\n${cyan}${bold}Lenevo Y510p IdeaPad${normal} - Yosemite $ProductVersion"
-    echo "https://github.com/intruder16/Y510p-OS-X\n"
+    echo "\n${cyan}${bold}Lenevo Y510p IdeaPad${normal} - (For Yosemite & up)"
+    echo ""
+    echo "Visit source : https://github.com/intruder16/Y510p-OS-X\n"
     echo "Script version \"${green}v$sVersion${normal}\""
     echo "
         Valid Options:
@@ -648,9 +664,10 @@ usage()
     echo "\n\t${blue}IMP: ${red}\"(-t)\"${normal} is a must! Files will be copied to the working dir leaving originals untouched."
     echo "\tTip : Use "'$HOME'" instead of "~" for home folder.\n"
     echo "Credits:\n"
-    echo "${BLUE}Laptop-DSDT${normal}: https://github.com/RehabMan/Laptop-DSDT-Patch"
-    echo "${BLUE}Pike R Aplha${normal}: https://github.com/Piker-Alpha/ssdtPRGen.sh"
-    echo "${BLUE}Dell XPS 9530${normal}: https://github.com/robvanoostenrijk/XPS9530-OSX\n"
+    echo "${blue}Laptop-DSDT${normal}: https://github.com/RehabMan/Laptop-DSDT-Patch"
+    echo "${blue}Pike R Aplha${normal}: https://github.com/Piker-Alpha/ssdtPRGen.sh"
+    echo "${blue}Dell XPS 9530${normal}: https://github.com/robvanoostenrijk/XPS9530-OSX\n"
+    echo "${cyan}Created by${normal} : ${green}${bold}intruder16${normal}\n"
 
     exit
 }
