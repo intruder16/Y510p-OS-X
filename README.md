@@ -1,4 +1,8 @@
-# OS X Yosemite on Lenevo Ideapad Y510p
+# OS X on Lenevo Ideapad Y510p
+
+```javascript
+Only for Yosemite 10.10 and above.
+```
 
 This repository contains all the necessary patches and an autopatcher script for DSDT/SSDT's on Y510p.
 
@@ -14,7 +18,7 @@ So what this script will do is re-patch your extracted tables with the necessary
 
 #Guide for installing OS X Yosemite
 
-To install OS X Yosemite on your Y510p you can refer to [this](http://www.insanelymac.com/forum/topic/303276-guide-for-installing-os-x-yosemite-on-lenovo-ideapad-y510p/) excellent guide with all the necessary steps to make your
+To install OS X on your Y510p you can refer to [this](http://www.insanelymac.com/forum/topic/303276-guide-for-installing-os-x-yosemite-on-lenovo-ideapad-y510p/) excellent guide with all the necessary steps to make your
 Hackintosh up and running.
 
 #Dump ACPI tables
@@ -33,7 +37,7 @@ git clone https://github.com/intruder16/Y510p-OS-X.git
 ```
 OR 
 
-if you do not have a working interet connection, download the repo as zip (option in down-right corner)
+if you do not have a working internet connection, download the repo as zip (option in down-right corner) from an internet enabled pc.
 
 This will create a Y510p-OS-X folder with all the patches and autopatcher  script.
 
