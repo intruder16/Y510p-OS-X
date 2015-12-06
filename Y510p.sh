@@ -66,9 +66,6 @@ CONTINUE=false
 # Keep all SSDT's to 0 (flase) by default
 keep_all="0"
 
-# OS version i.e. 'Yosemite' etc
-OSVersion="$(system_profiler SPSoftwareDataType | awk '/Volume/ {print $3,$4}')"
-
 # The version info of the running system i.e. '10.10.2' etc
 ProductVersion="$(sw_vers -productVersion)"
 
@@ -93,7 +90,7 @@ copy_tables()
     echo "\n    >>>>   Copying Pacthes   <<<<    \n" >> $logFile 2>&1   #Logging Purpose Only
     cp -v patches/mine/*.txt ${tmp_d}/patches/  >> $logFile 2>&1
     # Modify usb patch if El Capitan detected
-    if [ "$OSVersion" == "El Capitan" ] ; then
+    if [[ $ProductVersion == *"10.11"* ]] ; then
     	echo "Removing conflicting code from ${tmp_d}/patches/usb.txt" >> $logFile 2>&1   #Logging Purpose Only
         sed -i '' '/# rename XHC to XHC1/,$d' ${tmp_d}/patches/usb.txt
     fi
@@ -566,7 +563,7 @@ check_internet()
 #Checking OS version
 check_os()
 {
-        echo "${green}${bold}[ PreRun ]${normal}: ${blue}${bold}OS X $OSVersion $ProductVersion${normal}${bold} Detected! Continuing...${normal}"
+        echo "${green}${bold}[ PreRun ]${normal}: ${blue}${bold}OS X $ProductVersion${normal}${bold} Detected! Continuing...${normal}"
         check_internet
 }
 
