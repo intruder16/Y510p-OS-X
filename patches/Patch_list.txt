@@ -29,6 +29,8 @@ WMMX_remove.txt
 Compilation.txt
 Haswell-HDMI.txt
 misc_Lid_PRW.txt
-usb.txt
 syntax_ppc.txt
 system_MCHC.txt
+usb_wake.txt
+usb_yosemite.txt
+usb_el_capitan.txt
