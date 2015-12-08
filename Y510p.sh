@@ -15,7 +15,7 @@
 #           -Added "logging system"
 #           -Added "patches check"
 #           -Added choice for both Synaptics & ELAN Touchpad users (needed for brightness keys to work)
-#           -Added choice for debug methods (DSDT, _WAK/_PTC, Qxx)
+#           -Added choice for debug methods (DSDT, _WAK/_PTS, Qxx)
 #           -Intelligent SSDT patching, that is, no matter how you extract acpi tables they will be patched always right. For Ex.
 #               Every method has unique naming of ssdt's.
 #               If extracted from linux then ssdt1,ssd2,etc and ssdt6, ssdt7 & ssdt8 inside dynamic folder.
@@ -41,12 +41,16 @@
 #           -Added support for El Caiptan 10.11 & above
 #           -Added support for SmartTouchpad users for both Synaptic & ELAN touchpads
 #           -minor improvements/optimizations
+#   v1.6 :
+#           -Fixed USB patches for El Caiptan 10.11 & above
+#           -Fixed a bug where DSDT won't compile if you did not chose to add "DSDT Debug Methods" but chose "WAK/PTS" or "EC Queries"
+#           -Raised "tmp-1", "tmp-2" folder limit to "tmp-100" (previously upto "tmp-10")
 
 
 clear # Make some space xD
 
 # Script version
-sVersion=1.5
+sVersion=1.6
 
 # Set the colours you can use
 black='\033[0;30m'
@@ -89,11 +93,6 @@ copy_tables()
     # Copying patches
     echo "\n    >>>>   Copying Pacthes   <<<<    \n" >> $logFile 2>&1   #Logging Purpose Only
     cp -v patches/mine/*.txt ${tmp_d}/patches/  >> $logFile 2>&1
-    # Modify usb patch if El Capitan detected
-    if [[ $ProductVersion == *"10.11"* ]] ; then
-    	echo "Removing conflicting code from ${tmp_d}/patches/usb.txt" >> $logFile 2>&1   #Logging Purpose Only
-        sed -i '' '/# rename XHC to XHC1/,$d' ${tmp_d}/patches/usb.txt
-    fi
     # Copying orig DSDT/SSDT's
     echo "\n    >>>>   Copying DSDT/SSDT's   <<<<    \n" >> $logFile 2>&1   #Logging Purpose Only
     cp -v "${target_dir}/DSDT"*"" "${tmp_d}/DSDT/" >> $logFile 2>&1
@@ -262,7 +261,19 @@ patch_dsdt()
     ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/DSDT.dsl ${tmp_d}/patches/system_PNOT.txt ${tmp_d}/DSDT/Decompiled/DSDT.dsl >> $patch_log 2>&1
     fi
 
+    echo "     ...    [usb] USB Fix"
+    # Different usb patch if El Capitan detected
+    if [[ $ProductVersion == *"10.11"* ]] ; then
+        echo "\nEl Capitan detected...Will apply patch for same\n" >> $logFile 2>&1   #Logging Purpose Only
+        ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/DSDT.dsl ${tmp_d}/patches/usb_el_capitan.txt ${tmp_d}/DSDT/Decompiled/DSDT.dsl >> $patch_log 2>&1
+    else
+        echo "\nYosemite detected...Will apply patch for same\n" >> $logFile 2>&1   #Logging Purpose Only
+        ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/DSDT.dsl ${tmp_d}/patches/usb_yosemite.txt ${tmp_d}/DSDT/Decompiled/DSDT.dsl >> $patch_log 2>&1
+    fi
+
     echo "     ...    [usb] 7-series/8-series USB"
+    ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/DSDT.dsl ${tmp_d}/patches/usb_7-series.txt ${tmp_d}/DSDT/Decompiled/DSDT.dsl >> $patch_log 2>&1
+
     ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/DSDT.dsl ${tmp_d}/patches/usb_7-series.txt ${tmp_d}/DSDT/Decompiled/DSDT.dsl >> $patch_log 2>&1
 
     echo "     ...    [gfx] Rename GFX0 to IGPU"
@@ -315,7 +326,7 @@ patch_dsdt()
     [yY]* ) echo "     ...    That's already enabled xD"
             break;;
     [nN]* ) echo "     ...    [mine] Disable Wake on USB"
-            ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/DSDT.dsl ${tmp_d}/patches/usb.txt ${tmp_d}/DSDT/Decompiled/DSDT.dsl >> $patch_log 2>&1
+            ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/DSDT.dsl ${tmp_d}/patches/usb_wake.txt ${tmp_d}/DSDT/Decompiled/DSDT.dsl >> $patch_log 2>&1
             break;;
         * ) echo "                   Dude, just enter Y or N, please.";;
     esac
@@ -339,6 +350,7 @@ patch_dsdt()
     case $answer in
     [yY]* ) echo "     ...    [debug] Add DSDT Debug Methods"
             ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/DSDT.dsl ${tmp_d}/patches/debug.txt ${tmp_d}/DSDT/Decompiled/DSDT.dsl >> $patch_log 2>&1
+            touch ${tmp_d}/dsdt_debug_check.txt
             break;;
     [nN]* ) break;;
         * ) echo "                   Dude, just enter Y or N, please.";;
@@ -349,8 +361,23 @@ patch_dsdt()
     do
     read -p "     -------->     Do you want to add _WAK/_PTS debug methods? (y/n) " answer
     case $answer in
-    [yY]* ) echo "     ...    [debug] Instrument _WAK/_PTS"
-            ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/DSDT.dsl ${tmp_d}/patches/instrument_WAK_PTS.txt ${tmp_d}/DSDT/Decompiled/DSDT.dsl >> $patch_log 2>&1
+    [yY]* ) if [ -f "${tmp_d}/dsdt_debug_check.txt" ] ; then
+                echo "     ...    [debug] Instrument _WAK/_PTS"
+                ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/DSDT.dsl ${tmp_d}/patches/instrument_WAK_PTS.txt ${tmp_d}/DSDT/Decompiled/DSDT.dsl >> $patch_log 2>&1
+            fi
+            while [ ! -f "${tmp_d}/dsdt_debug_check.txt" ]
+            do
+            read -p "     ...           Note: \"DSDT Debug Methods\" need to be added for this to work. Continue? (y/n) " answer
+            case $answer in
+            [yY]* ) echo "     ...    [debug] Add DSDT Debug Methods"
+                    ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/DSDT.dsl ${tmp_d}/patches/debug.txt ${tmp_d}/DSDT/Decompiled/DSDT.dsl >> $patch_log 2>&1
+                    echo "     ...    [debug] Instrument _WAK/_PTS"
+                    ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/DSDT.dsl ${tmp_d}/patches/instrument_WAK_PTS.txt ${tmp_d}/DSDT/Decompiled/DSDT.dsl >> $patch_log 2>&1
+                    break 2;;
+            [nN]* ) break 2;;
+                * ) echo "                   Dude, just enter Y or N, please.";;
+            esac
+            done
             break;;
     [nN]* ) break;;
         * ) echo "                   Dude, just enter Y or N, please.";;
@@ -361,14 +388,30 @@ patch_dsdt()
     do
     read -p "     -------->     Do you want to add EC Queries debug methods? (y/n) " answer
     case $answer in
-    [yY]* ) echo "     ...    [debug] Instrument EC Queries"
-            ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/DSDT.dsl ${tmp_d}/patches/instrument_Qxx.txt ${tmp_d}/DSDT/Decompiled/DSDT.dsl >> $patch_log 2>&1
+    [yY]* ) if [ -f "${tmp_d}/dsdt_debug_check.txt" ] ; then
+                echo "     ...    [debug] Instrument EC Queries"
+                ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/DSDT.dsl ${tmp_d}/patches/instrument_Qxx.txt ${tmp_d}/DSDT/Decompiled/DSDT.dsl >> $patch_log 2>&1
+            fi
+            while [ ! -f "${tmp_d}/dsdt_debug_check.txt" ]
+            do
+            read -p "     ...           Note: \"DSDT Debug Methods\" need to be added for this to work. Continue? (y/n) " answer
+            case $answer in
+            [yY]* ) echo "     ...    [debug] Add DSDT Debug Methods"
+                    ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/DSDT.dsl ${tmp_d}/patches/debug.txt ${tmp_d}/DSDT/Decompiled/DSDT.dsl >> $patch_log 2>&1
+                    echo "     ...    [debug] Instrument EC Queries"
+                    ./tools/patchmatic ${tmp_d}/DSDT/Decompiled/DSDT.dsl ${tmp_d}/patches/instrument_Qxx.txt ${tmp_d}/DSDT/Decompiled/DSDT.dsl >> $patch_log 2>&1
+                    break 2;;
+            [nN]* ) break 2;;
+                * ) echo "                   Dude, just enter Y or N, please.";;
+            esac
+            done
             break;;
     [nN]* ) break;;
         * ) echo "                   Dude, just enter Y or N, please.";;
     esac
     done
     patch_ssdt
+    rm ${tmp_d}/dsdt_debug_check.txt >> /dev/null 2>&1
 }
 
 patch_ssdt()
@@ -585,10 +628,10 @@ echo "$keep_all"
     echo "\t 4. The copied tables will be decompiled to a new folder \"tmp/DSDT/Decompiled/\" and the"
     echo "\t    originals will be copied to \"tmp/DSDT/Originals/\" and the SSDT's will be renamed"
     echo "\t    in order for better injection through clover.\n"
-    echo "\t 5. Now the script will check if all the patches are available by running all the patches.txt"
+    echo "\t 5. Now the script will check if all the patches are available by running all the patches"
     echo "\t    through a patch list specified in patch folder.\n"
-    echo "\t 6. Finally the pacthing of DSDT and SSDT's will start. After that the tables are compiled"
-    echo "\t    and you can see them in \"tmp/DSDT/Compiled/\" folder.\n"
+    echo "\t 6. Finally the pacthing of DSDT and SSDT's will start acc. to the OS version detected."
+    echo "\t    After that the tables are compiled and you can see them in \"tmp/DSDT/Compiled/\" folder.\n"
     echo "\t 7. Most Important : The script will log everything it does in log files inside \"tmp/\""
     echo "\t    You are ${red}highly advised${normal} to check the logs afterwards to check if everything went OK.\n"
     echo ""
@@ -600,7 +643,9 @@ echo "$keep_all"
     [yY]* ) CONTINUE=true
             clear
             if [ -d "tmp/" ] ; then # Check if tmp dir already exists
-                n=$(ls tmp/ | grep tmp\* |  sed 's/^.\{4\}//' | tail -n1) ;
+                a=$(ls tmp/ | sed 's/tmp-//g')
+                IFS=$'\n'
+                n=$(echo "${a[*]}" | sort -nr | head -n1)
                 if [[ $n =~ ^-?[0-9]+$ ]] ; then
                     m=$((n + 1)) ;
                     echo "${green}${bold}[  Info  ]${normal}: ${bold}Looks like you have used this script '${red}${bold}$m${normal}' times (\"${blue}${bold}tmp-'$n'${normal}${bold}\" dir exist!)${normal}" ;
@@ -693,10 +738,10 @@ fi
     echo "\t 4. The copied tables will be decompiled to a new folder \"tmp/DSDT/Decompiled/\" and the"
     echo "\t    originals will be copied to \"tmp/DSDT/Originals/\" and the SSDT's will be renamed"
     echo "\t    in order for better injection through clover.\n"
-    echo "\t 5. Now the script will check if all the patches are available by running all the patches.txt"
+    echo "\t 5. Now the script will check if all the patches are available by running all the patches"
     echo "\t    through a patch list specified in patch folder.\n"
-    echo "\t 6. Finally the pacthing of DSDT and SSDT's will start. After that the tables are compiled"
-    echo "\t    and you can see them in \"tmp/DSDT/Compiled/\" folder.\n"
+    echo "\t 6. Finally the pacthing of DSDT and SSDT's will start acc. to the OS version detected."
+    echo "\t    After that the tables are compiled and you can see them in \"tmp/DSDT/Compiled/\" folder.\n"
     echo "\t 7. Most Important : The script will log everything it does in log files inside \"tmp/\""
     echo "\t    You are ${red}highly advised${normal} to check the logs afterwards to check if everything went OK.\n"
     echo ""
