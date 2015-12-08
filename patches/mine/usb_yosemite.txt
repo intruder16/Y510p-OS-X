@@ -1,0 +1,6 @@
+# rename XHC to XHC1
+
+into device label XHC set_label begin XHC1 end;
+into_all all code_regex XHC\. replaceall_matched begin XHC1. end;
+into_all all code_regex XHC_\. replaceall_matched begin XHC1. end;
+into_all all code_regex \.XHC, replaceall_matched begin .XHC1, end;
