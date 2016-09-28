@@ -3,6 +3,7 @@
 ```javascript
 Only for Yosemite 10.10 and above.
 ```
+
 Update : Same functionality but different method using Clover Hotpatch here : https://github.com/intruder16/Y510p-OS-X-Clover-Hotpatch
 
 This repository contains all the necessary patches and an autopatcher script for DSDT/SSDT's on Y510p.
