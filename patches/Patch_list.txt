@@ -23,7 +23,7 @@ misc_Haswell-LPC.txt
 debug.txt
 instrument_WAK_PTS.txt
 instrument_Qxx.txt
-graphics_PNLF_haswell.txt
+graphics_PNLF.txt
 Fix_Error.txt
 WMMX_remove.txt
 Compilation.txt

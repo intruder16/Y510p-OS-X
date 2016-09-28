@@ -10,12 +10,12 @@
  *     Checksum         0x00
  *     OEM ID           "APPLE "
  *     OEM Table ID     "CpuPm"
- *     OEM Revision     0x00015600 (87552)
+ *     OEM Revision     0x00020400 (132096)
  *     Compiler ID      "INTL"
  *     Compiler Version 0x20140210 (538182160)
  */
 
-DefinitionBlock ("ssdt.aml", "SSDT", 1, "APPLE ", "CpuPm", 0x00015600)
+DefinitionBlock ("ssdt.aml", "SSDT", 1, "APPLE ", "CpuPm", 0x00020400)
 {
     External (\_PR_.CPU0, DeviceObj)
     External (\_PR_.CPU1, DeviceObj)
@@ -30,18 +30,19 @@ DefinitionBlock ("ssdt.aml", "SSDT", 1, "APPLE ", "CpuPm", 0x00015600)
     {
         Method (_INI, 0, NotSerialized)
         {
-            Store ("ssdtPRGen version....: 15.6 / Mac OS X 10.10.3 (14D131)", Debug)
-            Store ("target processor.....: i7-4700MQ", Debug)
-            Store ("running processor....: Intel(R) Core(TM) i7-4700MQ CPU @ 2.40GHz", Debug)
-            Store ("baseFrequency........: 800", Debug)
-            Store ("frequency............: 2400", Debug)
-            Store ("busFrequency.........: 100", Debug)
-            Store ("logicalCPUs..........: 8", Debug)
-            Store ("maximum TDP..........: 47", Debug)
-            Store ("packageLength........: 27", Debug)
-            Store ("turboStates..........: 10", Debug)
-            Store ("maxTurboFrequency....: 3400", Debug)
-            Store ("machdep.xcpm.mode....: 1", Debug)
+            Store ("ssdtPRGen version.....: 20.4 / Mac OS X 10.12 (16A323)", Debug)
+            Store ("custom mode...........: 0", Debug)
+            Store ("host processor........: Intel(R) Core(TM) i7-4700MQ CPU @ 2.40GHz", Debug)
+            Store ("target processor......: i7-4700MQ", Debug)
+            Store ("number of processors..: 1", Debug)
+            Store ("baseFrequency.........: 800", Debug)
+            Store ("frequency.............: 2400", Debug)
+            Store ("busFrequency..........: 100", Debug)
+            Store ("logicalCPUs...........: 8", Debug)
+            Store ("maximum TDP...........: 47", Debug)
+            Store ("packageLength.........: 27", Debug)
+            Store ("turboStates...........: 10", Debug)
+            Store ("maxTurboFrequency.....: 3400", Debug)
         }
 
         Name (APLF, Zero)
@@ -82,7 +83,7 @@ DefinitionBlock ("ssdt.aml", "SSDT", 1, "APPLE ", "CpuPm", 0x00015600)
 
         Method (ACST, 0, NotSerialized)
         {
-            Store ("Method CPU0.ACST Called", Debug)
+            Store ("Method _PR_.CPU0.ACST Called", Debug)
             Store ("CPU0 C-States    : 29", Debug)
 
             /* Low Power Modes for CPU0 */
@@ -158,7 +159,7 @@ DefinitionBlock ("ssdt.aml", "SSDT", 1, "APPLE ", "CpuPm", 0x00015600)
 
         Method (_DSM, 4, NotSerialized)
         {
-            Store ("Method CPU0._DSM Called", Debug)
+            Store ("Method _PR_.CPU0._DSM Called", Debug)
 
             If (LEqual (Arg2, Zero))
             {
@@ -187,7 +188,7 @@ DefinitionBlock ("ssdt.aml", "SSDT", 1, "APPLE ", "CpuPm", 0x00015600)
 
         Method (ACST, 0, NotSerialized)
         {
-            Store ("Method CPU1.ACST Called", Debug)
+            Store ("Method _PR_.CPU1.ACST Called", Debug)
             Store ("CPU1 C-States    : 31", Debug)
 
             /* Low Power Modes for CPU1 */
